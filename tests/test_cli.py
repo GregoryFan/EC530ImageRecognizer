@@ -35,11 +35,31 @@ async def test_start():
     except asyncio.CancelledError:
         pass
 
-    pubsub.unsubscribe("service.ready")
-    await pubsub.close()
-    await r.close()
+    await pubsub.unsubscribe("service.ready")
+    await pubsub.aclose()
+    await r.aclose()
 
+@pytest.mark.asyncio
+async def test_wait_for_services():
+    
+    r = Redis(host='localhost', port=6379, decode_responses=True)
+    expected_services = {"test", "test_2"}
 
+    main.await_for_services(r, expected_services)
+
+    await r.sadd("services.ready", "test")
+
+    #Check that the function is still waiting for the second service
+    assert not r.sismember("services.ready", "test_2"), "Function should still be waiting for test_2 to be ready"
+    await r.sadd("services.ready", "test_2")
+
+    #Check that the function has now detected that both services are ready
+    assert r.sismember("services.ready", "test_2"), "Function should have detected that test_2 is ready"
+
+    #cleanup
+    await r.srem("services.ready", "test")
+    await r.srem("services.ready", "test_2")
+    await r.aclose()
     
 
 @pytest.mark.asyncio
