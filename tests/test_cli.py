@@ -13,7 +13,7 @@ async def test_start():
     #Subscribe to service.ready to ensure that the main function is running and publishing the ready message
     await pubsub.subscribe("service.ready")
 
-    await main.start()
+    cli_task = asyncio.create_task(main.start())
 
     message = await pubsub.get_message(timeout=5)  # Wait for a message with a timeout
 
@@ -22,14 +22,19 @@ async def test_start():
     assert message["data"] == "cli_service", f"Expected data 'cli_service', got {message['data']}"
 
     #cleanup
+    cli_task.cancel()
+    try:
+        await cli_task
+    except asyncio.CancelledError:
+        pass
+
     pubsub.unsubscribe("service.ready")
     await pubsub.close()
     await r.close()
+
 
     
 
 @pytest.mark.asyncio
 async def test_handle_queried_images():
     assert True
-
-
