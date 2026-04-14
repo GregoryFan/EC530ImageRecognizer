@@ -41,24 +41,28 @@ async def test_start():
 
 @pytest.mark.asyncio
 async def test_wait_for_services():
-    
     r = Redis(host='localhost', port=6379, decode_responses=True)
     expected_services = {"test", "test_2"}
 
-    main.wait_for_services(r, expected_services)
+    # Run concurrently — don't await yet
+    wait_task = asyncio.create_task(main.wait_for_services(r, expected_services))
 
-    await r.sadd("services.ready", "test")
+    # Give the pubsub a moment to subscribe before we publish
+    await asyncio.sleep(0.1)
 
-    #Check that the function is still waiting for the second service
-    assert not r.sismember("services.ready", "test_2"), "Function should still be waiting for test_2 to be ready"
-    await r.sadd("services.ready", "test_2")
+    # wait_for_services listens on "service.ready", so publish there
+    await r.publish("service.ready", "test")
 
-    #Check that the function has now detected that both services are ready
-    assert r.sismember("services.ready", "test_2"), "Function should have detected that test_2 is ready"
+    # Confirm task is still running (not done yet)
+    assert not wait_task.done(), "Should still be waiting for test_2"
 
-    #cleanup
-    await r.srem("services.ready", "test")
-    await r.srem("services.ready", "test_2")
+    await r.publish("service.ready", "test_2")
+
+    # Now it should complete
+    await asyncio.wait_for(wait_task, timeout=5)
+    assert wait_task.done(), "Task should have completed after both services ready"
+
+    # Cleanup
     await r.aclose()
     
 
