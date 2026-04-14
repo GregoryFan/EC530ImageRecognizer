@@ -1,3 +1,7 @@
+import json
+import asyncio
+from redis.asyncio import Redis
+
 #Embedding Service for generating image embeddings
 
 #Listens for image inference data, and generates embeddings for the image.
@@ -7,6 +11,49 @@
 #   "embedding": [0.1, 0.2, 0.3, ...]  # This is a list of numbers representing the embedding
 #}
 
+#redis services
+r = Redis(host='localhost', port=6379, decode_responses=True)
+pubsub = r.pubsub()
 
-def generate_embedding(inference_data):
-    pass
+#Gets service ready to listen
+async def start():
+    await pubsub.subscribe("image.inference_results")
+    print("[embedding_service] Listening on image.inference_results")
+
+    await r.sadd("services_ready", "embedding_service")
+    await r.publish("service.ready", "embedding_service")
+    try:
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                await generate_embedding(message)
+    except asyncio.CancelledError:
+        print("[embedding_service] Shutting down listener...")
+    finally:
+        await r.srem("services_ready", "embedding_service")
+        await pubsub.unsubscribe("image.inference_results")
+        await pubsub.close()
+        await r.close()
+
+async def generate_embedding(message):
+    data = json.loads(message["data"])
+    image_id = data["image_id"]
+    inferences = data["inferences"]
+
+    embeddings = []
+    for inference in inferences:
+        #Unused i guess
+        label = inference["label"]
+        vertices = inference["vertices"]
+
+        #embeddings should be generated based on vertices and label, but what do i know
+        embedding = [0.1, 0.2, 0.3]
+        embeddings.append(embedding)
+
+    for embedding in embeddings:
+        await r.publish(
+            "image.embedding_results",
+            json.dumps({
+                "image_id": image_id,
+                "embedding": embedding
+            })
+        )

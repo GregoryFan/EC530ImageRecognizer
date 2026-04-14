@@ -1,6 +1,7 @@
 import json
 import upload_service
 import inference_service
+import embedding_service
 import asyncio
 from redis.asyncio import Redis
 
@@ -17,7 +18,8 @@ async def cli():
     print("\nStarting Services..\n")
     expected_services = {
         "upload_service",
-        "inference_service"
+        "inference_service",
+        "embedding_service"
     }
     await wait_for_services(r, expected_services)
     print("\nServices started.\n")
@@ -71,6 +73,7 @@ async def wait_for_services(r, expected_services):
 async def main():
     upload_task = asyncio.create_task(upload_service.start())
     inference_task = asyncio.create_task(inference_service.start())
+    embedding_task = asyncio.create_task(embedding_service.start())
     cli_task = asyncio.create_task(cli())
 
     await cli_task  # wait until user quits
@@ -79,10 +82,12 @@ async def main():
 
     upload_task.cancel()
     inference_task.cancel()
+    embedding_task.cancel()
     #shut down everything else
     try:
         await upload_task
         await inference_task
+        await embedding_task
     except asyncio.CancelledError:
         pass
 
