@@ -11,16 +11,18 @@ async def test_start():
     pubsub = r.pubsub()
 
     #Subscribe to service.ready to ensure that the main function is running and publishing the ready message
-    await pubsub.subscribe("service.ready", ignore_subscribe_messages=True)
+    await pubsub.subscribe("service.ready")
 
     while True:
-        message = await pubsub.get_message(timeout=1)  # Wait for a message with a timeout
-        if message["type"] == "subscribe":
+        message = await pubsub.get_message(timeout=1)
+        if message is not None and message["type"] == "subscribe":
             break
+
     cli_task = asyncio.create_task(main.start())
 
-
-    message = await pubsub.get_message(timeout=5, ignore_subscribe_messages=True)  # Wait for a message with a timeout
+    message = None
+    while message is None or message["type"] != "message":
+        message = await pubsub.get_message(timeout=5)  
 
     assert message is not None, "Did not receive any message on service.ready channel"
     assert message["type"] == "message", f"Expected message type 'message', got {message['type']}"
