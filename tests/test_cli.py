@@ -11,7 +11,7 @@ async def test_start():
     pubsub = r.pubsub()
 
     #Subscribe to service.ready to ensure that the main function is running and publishing the ready message
-    await pubsub.subscribe("service.ready")
+    await pubsub.subscribe("service.ready", ignore_subscribe_messages=True)
 
     cli_task = asyncio.create_task(main.start())
 
