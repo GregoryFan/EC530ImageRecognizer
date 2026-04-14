@@ -45,7 +45,7 @@ async def test_wait_for_services():
     r = Redis(host='localhost', port=6379, decode_responses=True)
     expected_services = {"test", "test_2"}
 
-    main.await_for_services(r, expected_services)
+    main.wait_for_services(r, expected_services)
 
     await r.sadd("services.ready", "test")
 
