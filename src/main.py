@@ -25,7 +25,7 @@ async def start():
 
     await r.sadd("services_ready", "cli_service")
     await r.publish("service.ready", "cli_service")
-
+    
     try:
         async for message in pubsub.listen():
             if message["type"] == "message":
