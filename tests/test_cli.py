@@ -3,12 +3,23 @@ import asyncio
 from redis.asyncio import Redis
 import pytest
 
-#r = Redis(host='localhost', port=6379, decode_responses=True)
-#pubsub = r.pubsub()
+
 
 @pytest.mark.asyncio
 async def test_start():
-    assert True
+    r = Redis(host='localhost', port=6379, decode_responses=True)
+    pubsub = r.pubsub()
+
+    #Subscribe to service.ready to ensure that the main function is running and publishing the ready message
+    await pubsub.subscribe("service.ready")
+
+    await main.start()
+
+    message = await pubsub.get_message(timeout=5)  # Wait for a message with a timeout
+    
+    assert message is not None, "Did not receive any message on service.ready channel"
+    assert message["type"] == "message", f"Expected message type 'message', got {message['type']}"
+    assert message["data"] == "cli_service", f"Expected data 'cli_service', got {message['data']}"
 
 @pytest.mark.asyncio
 async def test_wait_for_services():
