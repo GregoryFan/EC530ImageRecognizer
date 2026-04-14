@@ -12,8 +12,11 @@ pubsub = r.pubsub()
 
 #Gets service ready to listen
 async def start():
-    await pubsub.subscribe("image_uploads")
+    await pubsub.subscribe("image.uploads")
     print("[upload_service] Listening on image_uploads")
+
+    await r.sadd("services_ready", "upload_service")
+    await r.publish("service.ready", "upload_service")
 
     try:
         async for message in pubsub.listen():
@@ -22,6 +25,7 @@ async def start():
     except asyncio.CancelledError:
         print("[upload_service] Shutting down listener...")
     finally:
+        await r.srem("services_ready", "upload_service")
         await pubsub.unsubscribe("image_uploads")
         await pubsub.close()
         await r.close()
@@ -48,10 +52,9 @@ async def handle_uploaded_image(message):
 
     #Sends this over to the inference service.
     await r.publish(
-        "image.inferred",
+        "image.inferrences",
         json.dumps({
             "image_id": str(uuid.uuid4()),  
-            "image_path": image_path,
             "image_data": image_data
         })
     )

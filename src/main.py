@@ -1,5 +1,6 @@
 import json
 import upload_service
+import inference_service
 import asyncio
 from redis.asyncio import Redis
 
@@ -13,8 +14,15 @@ r = Redis(host='localhost', port=6379, decode_responses=True)
 
 #async input function
 async def cli():
-    await asyncio.sleep(1) # wait for other services to start
+    print("\nStarting Services..\n")
+    expected_services = {
+        "upload_service",
+        "inference_service"
+    }
+    await wait_for_services(r, expected_services)
+    print("\nServices started.\n")
 
+    
     while True:
         user_input = await asyncio.get_event_loop().run_in_executor(
             None, input, "\nUse the service through the commands:\n'upload [image_path]' to upload an image\n'query [tag]' to query for images\n'quit' to exit:\n\n Command: "
@@ -23,7 +31,7 @@ async def cli():
         if user_input.startswith("upload"):
             image_path = user_input.split(" ")[1]
             await r.publish(
-                "image_uploads",
+                "image.uploads",
                 json.dumps({"image_path": image_path})
             )
         elif user_input.startswith("query"):
@@ -36,8 +44,33 @@ async def cli():
         else:
             print("Invalid command. Please try again.")
 
+async def wait_for_services(r, expected_services):
+    pubsub = r.pubsub()
+    await pubsub.subscribe("service.ready")
+
+    ready = set()
+
+    while True:
+        message = await pubsub.get_message(
+            ignore_subscribe_messages=True,
+            timeout=1.0
+        )
+
+        if message:
+            service_name = message["data"]
+            ready.add(service_name)
+
+            if ready == expected_services:
+                break
+
+        await asyncio.sleep(0.1)
+
+    await pubsub.unsubscribe("service.ready")
+    await pubsub.aclose()
+
 async def main():
     upload_task = asyncio.create_task(upload_service.start())
+    inference_task = asyncio.create_task(inference_service.start())
     cli_task = asyncio.create_task(cli())
 
     await cli_task  # wait until user quits
@@ -45,9 +78,11 @@ async def main():
     print("Shutting down...")
 
     upload_task.cancel()
+    inference_task.cancel()
     #shut down everything else
     try:
         await upload_task
+        await inference_task
     except asyncio.CancelledError:
         pass
 

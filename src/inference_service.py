@@ -1,3 +1,6 @@
+import json
+import asyncio
+from redis.asyncio import Redis
 #Generates inferences, which is defined by the following:
 
 #An inference is a boundary where an object is detected.
@@ -21,7 +24,55 @@
 #    ]
 #}
 
+#Redis services
+r = Redis(host='localhost', port=6379, decode_responses=True)
+pubsub = r.pubsub()
 
-def generate_inferences(image_data):
-    pass
+#Gets service ready to listen
+async def start():
+    await pubsub.subscribe("image.inferrences")
+    print("[inference_service] Listening on image.inferrences")
+
+    await r.sadd("services_ready", "inference_service")
+    await r.publish("service.ready", "inference_service")
+
+    try:
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                await generate_inferences(message)
+    except asyncio.CancelledError:
+        print("[inference_service] Shutting down listener...")
+    finally:
+        await r.srem("services_ready", "inference_service")
+        await pubsub.unsubscribe("image.inferences")
+        await pubsub.close()
+        await r.close()
+
+async def generate_inferences(message):
+    data = json.loads(message["data"])
+    image_id = data["image_id"]
+    image_data = data["image_data"]
+
+    print(f"[inference_service] Received image for inference: {image_id}")
+
+    #dummy inferences, no idea how real they are gonna be given.
+    inferences = [
+        {
+            "label": "cat",
+            "vertices": [(10, 10), (100, 10), (100, 100), (10, 100)]
+        },
+        {
+            "label": "dog",
+            "vertices": [(150, 150), (250, 150), (250, 250), (150, 250)]
+        }
+    ]
+
+    await r.publish(
+        "image.inference_results",
+        json.dumps({
+            "image_id": image_id,
+            "image_data": image_data,
+            "inferences": inferences
+        })
+    )
 
