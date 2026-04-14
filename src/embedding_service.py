@@ -39,6 +39,8 @@ async def generate_embedding(message):
     image_id = data["image_id"]
     inferences = data["inferences"]
 
+    print(f"[embedding_service] Received inferences for image: {image_id}")
+    
     embeddings = []
     for inference in inferences:
         #Unused i guess
