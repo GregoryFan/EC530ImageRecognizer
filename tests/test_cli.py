@@ -1,6 +1,7 @@
 import main
 import asyncio
 from redis.asyncio import Redis
+import pytest
 
 #r = Redis(host='localhost', port=6379, decode_responses=True)
 #pubsub = r.pubsub()
