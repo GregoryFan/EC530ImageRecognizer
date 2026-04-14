@@ -17,8 +17,8 @@ pubsub_queries = r.pubsub()
 async def start():
     await pubsub_upload.subscribe("image.inference_results")
     print("[db_service] Listening on image.inference_results")
-    await pubsub_queries.subscribe("query.query_embeddings")
-    print("[db_service] Listening on query.query_embeddings")
+    await pubsub_queries.subscribe("query.embedding_results")
+    print("[db_service] Listening on query.embedding_results")
     
 
     await r.sadd("services_ready", "db_service")
@@ -41,7 +41,7 @@ async def start():
         await r.srem("services_ready", "db_service")
 
         await pubsub_upload.unsubscribe("image.inference_results")
-        await pubsub_queries.unsubscribe("query.query_embeddings")
+        await pubsub_queries.unsubscribe("query.embedding_results")
 
         await pubsub_upload.close()
         await pubsub_queries.close()
@@ -70,9 +70,9 @@ async def upload_image(message):
 
 async def query_image(message):
     query_data = json.loads(message["data"])
-    image_ids = query_data["image_ids"]
+    similar_image_ids = query_data["similar_image_ids"]
 
-    print(f"[db_service] Received query for image IDs: {image_ids}")
+    print(f"[db_service] Received query for similar image IDs: {similar_image_ids}")
 
     #pretend i got the images from the db
     #TEST CODE

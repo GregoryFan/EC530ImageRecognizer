@@ -84,7 +84,7 @@ async def query_similar_images(message):
     similar_image_ids = [1, 2, 3]  
     
     await r.publish(
-        "query.results",
+        "query.embedding_results",
         json.dumps({
             "similar_image_ids": similar_image_ids
         })  
