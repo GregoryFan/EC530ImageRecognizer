@@ -15,7 +15,7 @@ async def test_start():
 
     cli_task = asyncio.create_task(main.start())
 
-    message = await pubsub.get_message(timeout=5)  # Wait for a message with a timeout
+    message = await pubsub.get_message(timeout=5, ignore_subscribe_messages=True)  # Wait for a message with a timeout
 
     assert message is not None, "Did not receive any message on service.ready channel"
     assert message["type"] == "message", f"Expected message type 'message', got {message['type']}"
