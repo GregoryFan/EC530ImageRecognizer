@@ -65,7 +65,3 @@ async def test_wait_for_services():
     # Cleanup
     await r.aclose()
     
-
-@pytest.mark.asyncio
-async def test_handle_queried_images():
-    assert True
