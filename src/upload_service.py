@@ -27,7 +27,7 @@ async def start():
     finally:
         await r.srem("services_ready", "upload_service")
         await pubsub.unsubscribe("image_uploads")
-        await pubsub.close()
+        await pubsub.aclose()
         await r.close()
 
     
