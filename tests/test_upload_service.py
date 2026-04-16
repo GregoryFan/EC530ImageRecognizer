@@ -1,8 +1,9 @@
-import upload_service
 import asyncio
-from redis.asyncio import Redis
-import pytest
+import base64
 import json
+import pytest
+from redis.asyncio import Redis
+import upload_service
 
 @pytest.mark.asyncio
 async def test_start():
@@ -39,33 +40,51 @@ async def test_start():
     await r.aclose()
 
 @pytest.mark.asyncio
-async def test_handle_uploaded_image():
+async def test_handle_uploaded_image(tmp_path):
+    # Create a real test image file
+    test_image = tmp_path / "test.png"
+    test_image.write_bytes(b"fake png bytes")
+
     r = Redis(host='localhost', port=6379, decode_responses=True)
     pubsub = r.pubsub()
-
     await pubsub.subscribe("image.inferrences")
 
-    #start the function
-    handle_task = asyncio.create_task(upload_service.handle_uploaded_image(json.dumps({"image_path": "test.png"})))
+    # Drain any leftover subscribe-confirmation messages
+    await pubsub.get_message(timeout=1)
 
-    #listen for the published message
+    # Correct message format: a dict with a "data" key holding a JSON string
+    message_payload = {"data": json.dumps({"image_path": str(test_image)})}
+
+    handle_task = asyncio.create_task(
+        upload_service.handle_uploaded_image(message_payload)
+    )
+
+    # Listen for the published message
     message = None
-    while message is None or message["type"] != "message":
-        message = await pubsub.get_message(timeout=5)
-    
-    assert message is not None, "Did not receive any message on image.inferrences channel"
-    assert message["type"] == "message", f"Expected message type 'message', got {message['type']}"
-    data = json.loads(message["data"])
-    assert "image_id" in data, "Expected 'image_id' in published data"
-    assert "image_data" in data, "Expected 'image_data' in published data"
+    for _ in range(10):  # bounded retry instead of infinite loop
+        message = await pubsub.get_message(timeout=2)
+        if message and message["type"] == "message":
+            break
 
-    #cleanup
+    assert message is not None, "Did not receive any message on image.inferrences channel"
+    assert message["type"] == "message"
+
+    data = json.loads(message["data"])
+    assert "image_id" in data
+    assert "image_data" in data
+
+    # Verify the base64 content is correct
+    expected = base64.b64encode(b"fake png bytes").decode("utf-8")
+    assert data["image_data"] == expected
+
+    # Cleanup
     handle_task.cancel()
     try:
         await handle_task
     except asyncio.CancelledError:
         pass
-    pubsub.unsubscribe("image.inferrences")
+
+    await pubsub.unsubscribe("image.inferrences")
     await pubsub.aclose()
     await r.aclose()
     
