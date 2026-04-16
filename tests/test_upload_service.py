@@ -54,8 +54,12 @@ async def test_handle_uploaded_image(tmp_path):
         if msg and msg["type"] == "subscribe":
             break
 
-    # Now it's safe to fire the task
-    message_payload = {"data": json.dumps({"image_path": str(test_image)})}
+    message_payload = {
+    "data": json.dumps({
+        "image_path": str(test_image),
+        "event_id": "test-event-123"  
+    })
+}
     handle_task = asyncio.create_task(
         upload_service.handle_uploaded_image(message_payload)
     )
@@ -74,8 +78,13 @@ async def test_handle_uploaded_image(tmp_path):
     assert message["type"] == "message"
 
     data = json.loads(message["data"])
+    assert "event_id" in data
+    assert data["event_id"] == "test-event-123"
     assert "image_id" in data
     assert "image_data" in data
+
+    expected = base64.b64encode(b"fake png bytes").decode("utf-8")
+    assert data["image_data"] == expected
 
     expected = base64.b64encode(b"fake png bytes").decode("utf-8")
     assert data["image_data"] == expected

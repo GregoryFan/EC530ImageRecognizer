@@ -28,7 +28,7 @@ async def start():
         await r.srem("services_ready", "upload_service")
         await pubsub.unsubscribe("image_uploads")
         await pubsub.aclose()
-        await r.close()
+        await r.aclose()
 
     
 #Listens for the CLI when it receives an image upload
