@@ -38,6 +38,7 @@ async def generate_embedding(message):
     data = json.loads(message["data"])
     image_id = data["image_id"]
     inferences = data["inferences"]
+    event_id = data["event_id"]
 
     print(f"[embedding_service] Received inferences for image: {image_id}")
     
@@ -55,6 +56,7 @@ async def generate_embedding(message):
         await r.publish(
             "image.embedding_results",
             json.dumps({
+                "event_id": event_id,
                 "image_id": image_id,
                 "embedding": embedding
             })

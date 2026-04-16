@@ -71,6 +71,7 @@ async def upload_image(message):
 async def query_image(message):
     query_data = json.loads(message["data"])
     similar_image_ids = query_data["similar_image_ids"]
+    event_id = query_data["event_id"]
 
     print(f"[db_service] Received query for similar image IDs: {similar_image_ids}")
 
@@ -85,6 +86,7 @@ async def query_image(message):
     await r.publish(
         "query.results",
         json.dumps({
+            "event_id": query_data["event_id"],
             "image_data": images
         })  
     )

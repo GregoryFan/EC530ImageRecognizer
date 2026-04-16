@@ -39,6 +39,7 @@ async def start():
 async def handle_uploaded_image(message):
     data = json.loads(message["data"])
     image_path = data["image_path"]
+    event_id = data["event_id"]
 
     print(f"[upload_service] Received: {image_path}")
 
@@ -54,6 +55,7 @@ async def handle_uploaded_image(message):
     await r.publish(
         "image.inferrences",
         json.dumps({
+            "event_id": event_id,
             "image_id": str(uuid.uuid4()),  
             "image_data": image_data
         })

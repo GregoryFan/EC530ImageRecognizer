@@ -74,6 +74,7 @@ async def upload_embedding(message):
 async def query_similar_images(message):
     data = json.loads(message["data"])
     query = data["tag"]
+    event_id = data["event_id"]
 
     print(f"[vector_db] Received query for tag: {query}")
 
@@ -86,6 +87,7 @@ async def query_similar_images(message):
     await r.publish(
         "query.embedding_results",
         json.dumps({
+            "event_id": event_id,
             "similar_image_ids": similar_image_ids
         })  
     )

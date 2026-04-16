@@ -8,6 +8,7 @@ import db_service
 import asyncio
 from redis.asyncio import Redis
 import subprocess
+import uuid
 
 #CLI Portion of the project
 #Asks the user either to import an image or query for images.
@@ -62,13 +63,19 @@ async def cli():
             image_path = user_input.split(" ")[1]
             await r.publish(
                 "image.uploads",
-                json.dumps({"image_path": image_path})
+                json.dumps({
+                    "image_path": image_path,
+                    "event_id": str(uuid.uuid4())
+                })
             )
         elif user_input.startswith("query"):
             tag = user_input.split(" ")[1]
             await r.publish(
                 "query.images",
-                json.dumps({"tag": tag})
+                json.dumps({
+                    "tag": tag,
+                    "event_id": str(uuid.uuid4())
+                })
             )
         elif user_input == "quit":
             print("Exiting.")

@@ -52,6 +52,7 @@ async def generate_inferences(message):
     data = json.loads(message["data"])
     image_id = data["image_id"]
     image_data = data["image_data"]
+    event_id = data["event_id"]
 
     print(f"[inference_service] Received image for inference: {image_id}")
 
@@ -70,6 +71,7 @@ async def generate_inferences(message):
     await r.publish(
         "image.inference_results",
         json.dumps({
+            "event_id": event_id,
             "image_id": image_id,
             "image_data": image_data,
             "inferences": inferences
