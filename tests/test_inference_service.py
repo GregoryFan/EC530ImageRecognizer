@@ -18,7 +18,7 @@ async def test_start():
         if message is not None and message["type"] == "subscribe":
             break
 
-    infer_task = asyncio.create_task(infer_task.start())
+    infer_task = asyncio.create_task(inference_service.start())
 
     message = None
     while message is None or message["type"] != "message":
