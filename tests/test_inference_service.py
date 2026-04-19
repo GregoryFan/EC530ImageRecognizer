@@ -4,6 +4,7 @@ import json
 import pytest
 from redis.asyncio import Redis
 import inference_service
+from unittest.mock import AsyncMock, patch, MagicMock
 
 @pytest.mark.asyncio
 async def test_start():
@@ -38,3 +39,24 @@ async def test_start():
     await pubsub.unsubscribe("service.ready")
     await pubsub.aclose()
     await r.aclose()
+
+@pytest.mark.asyncio
+async def test_generate_inferences_publishes_response():
+    message = {
+        "data": json.dumps({
+            "image_id": "img_123",
+            "event_id": "evt_456",
+            "image_data": "base64encodeddata"
+        })
+    }
+    mock_redis = AsyncMock()
+    with patch("inference_service.r", mock_redis):
+        await inference_service.generate_inferences(message)
+    mock_redis.publish.assert_called_once()
+    channel, payload = mock_redis.publish.call_args.args
+    assert channel == "image.inference_results"
+    result = json.loads(payload)
+    assert result["event_id"] == "evt_456"
+    assert result["image_id"] == "img_123"
+    assert result["image_data"] == "base64encodeddata"
+    assert "inferences" in result
