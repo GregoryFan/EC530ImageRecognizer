@@ -50,6 +50,13 @@ async def generate_embedding(message):
 
         #embeddings should be generated based on vertices and label, but what do i know
         embedding = [0.1, 0.2, 0.3]
+
+        #For Testing
+        if image_id == "d-o-g":
+            embedding = [1, 1, 1]
+        elif image_id == "c-a-t":
+            embedding = [0, 0, 0]
+        
         embeddings.append(embedding)
 
     for embedding in embeddings:

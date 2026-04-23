@@ -51,12 +51,20 @@ async def handle_uploaded_image(message):
         print(f"[upload_service] Error reading file: {e}")
         return
 
+    image_id = str(uuid.uuid4())
+
+    #This is solely for testing purposes.
+    if "dog" in image_path:
+        image_id = "d-o-g"
+    elif "cat" in image_path:
+        image_id = "c-a-t"
+
     #Sends this over to the inference service.
     await r.publish(
         "image.inferrences",
         json.dumps({
             "event_id": event_id,
-            "image_id": str(uuid.uuid4()),  
+            "image_id": image_id,  
             "image_data": image_data
         })
     )

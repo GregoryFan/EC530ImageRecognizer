@@ -57,6 +57,8 @@ async def generate_inferences(message):
     print(f"[inference_service] Received image for inference: {image_id}")
 
     #dummy inferences, no idea how real they are gonna be given.
+
+    #For testing, 
     inferences = [
         {
             "label": "cat",
@@ -68,13 +70,36 @@ async def generate_inferences(message):
         }
     ]
 
+    dog_inference = [
+        {
+            "label": "dog",
+            "vertices": [(150, 150), (250, 150), (250, 250), (150, 250)]
+        }
+    ]
+
+    cat_inference = [
+        { 
+            "label": "cat",
+            "vertices": [(10, 10), (100, 10), (100, 100), (10, 100)]
+        }
+    ]
+
+    #For testing again.
+    if image_id == "d-o-g":
+        given_inference = dog_inference
+    elif image_id == "c-a-t":
+        given_inference = cat_inference
+    else:
+        given_inference = inferences
+
+
     await r.publish(
         "image.inference_results",
         json.dumps({
             "event_id": event_id,
             "image_id": image_id,
             "image_data": image_data,
-            "inferences": inferences
+            "inferences": given_inference
         })
     )
 
