@@ -81,19 +81,15 @@ async def test_query_image(tmp_path):
     }
 
     handle_task = asyncio.create_task(db_service.query_image(message_payload))
-    await asyncio.sleep(0.1)
+    await handle_task  
 
-    if handle_task.done() and handle_task.exception():
-        raise handle_task.exception()
-
-    # Poll for the published result
     message = None
     for _ in range(10):
         message = await pubsub.get_message(timeout=2)
         if message and message["type"] == "message":
             break
 
-    assert message is not None, "Did not receive any message on query.results channel"
+    assert message is not None
 
     data = json.loads(message["data"])
     assert data["event_id"] == "test-event-456"

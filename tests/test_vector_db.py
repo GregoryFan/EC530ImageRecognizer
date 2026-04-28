@@ -68,6 +68,7 @@ async def test_query_similar_images():
     message_payload = {
         "data": json.dumps({
             "tag": "sunset",
+            "embedding": [0.1, 0.2, 0.3],
             "event_id": "test-event-456"
         })
     }
