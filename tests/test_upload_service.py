@@ -58,7 +58,6 @@ async def test_handle_uploaded_image(tmp_path):
     "data": json.dumps({
         "image_path": str(test_image),
         "event_id": "test-event-123",  
-        "inferences": {"test", [1 ,2 ,3 ,4]}
     })
 }
     handle_task = asyncio.create_task(

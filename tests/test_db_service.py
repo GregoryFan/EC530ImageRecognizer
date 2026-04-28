@@ -44,7 +44,11 @@ async def test_upload_image():
     message_payload = {
         "data": json.dumps({
             "image_id": "test-image-123",
-            "image_data": base64.b64encode(b"fake image bytes").decode("utf-8")
+            "image_data": base64.b64encode(b"fake image bytes").decode("utf-8"),
+            "inferences": [{ 
+                "label": "cat",
+                "vertices": [(10, 10), (100, 10), (100, 100), (10, 100)]
+            }]
         })
     }
 
