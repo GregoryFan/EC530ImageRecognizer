@@ -58,6 +58,15 @@ async def test_upload_image():
 
 @pytest.mark.asyncio
 async def test_query_image(tmp_path):
+
+    await db_service.init()  
+
+    # Seed MongoDB so query_image returns actual data
+    await db_service.images_collection.insert_many([
+        {"image_id": "img-1", "image_data": base64.b64encode(b"fake image 1").decode()},
+        {"image_id": "img-2", "image_data": base64.b64encode(b"fake image 2").decode()},
+    ])
+
     # query_image opens "test.png" hardcoded, so we need it to exist
     test_image = tmp_path / "test.png"
     test_image.write_bytes(b"fake png bytes")
