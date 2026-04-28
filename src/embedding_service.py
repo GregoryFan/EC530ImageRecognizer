@@ -65,6 +65,7 @@ async def generate_embedding(message):
             json.dumps({
                 "event_id": event_id,
                 "image_id": image_id,
-                "embedding": embedding
+                "embedding": embedding,
+                "inference": inference
             })
         )

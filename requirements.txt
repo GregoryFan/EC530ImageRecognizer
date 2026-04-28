@@ -1,2 +1,4 @@
 redis
 motor
+faiss-cpu
+numpy

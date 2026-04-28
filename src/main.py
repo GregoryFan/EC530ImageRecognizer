@@ -123,6 +123,9 @@ async def handle_queried_images(message):
         subprocess.Popen(["open", path])
 
 async def main():
+    
+    #This is the part where it starts all the tasks,
+    #Theoretically starting code can be called elsewhere, but this is for convenience.
     upload_task = asyncio.create_task(upload_service.start())
     inference_task = asyncio.create_task(inference_service.start())
     embedding_task = asyncio.create_task(embedding_service.start())
