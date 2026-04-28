@@ -18,6 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
       redis:
         image: redis:latest
         ports:

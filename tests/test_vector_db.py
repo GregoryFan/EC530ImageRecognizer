@@ -55,6 +55,16 @@ async def test_upload_embedding():
 
 @pytest.mark.asyncio
 async def test_query_similar_images():
+
+    seed_payload = {
+        "data": json.dumps({
+            "image_id": "img-seed-sunset",
+            "embedding": [0.1, 0.2, 0.3],
+            "inference": "sunset"
+        })
+    }
+    await vector_db.upload_embedding(seed_payload)
+    
     r = Redis(host='localhost', port=6379, decode_responses=True)
     pubsub = r.pubsub()
     await pubsub.subscribe("query.embedding_results")

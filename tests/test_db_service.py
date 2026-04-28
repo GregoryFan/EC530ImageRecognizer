@@ -106,12 +106,6 @@ async def test_query_image(tmp_path):
         decoded = base64.b64decode(img)
         assert len(decoded) > 0
 
-    # Cleanup
-    handle_task.cancel()
-    try:
-        await handle_task
-    except asyncio.CancelledError:
-        pass
 
     os.chdir(original_dir)
     await pubsub.unsubscribe("query.results")
